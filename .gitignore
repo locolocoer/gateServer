@@ -1,0 +1,4 @@
+*.ini
+/x64/*
+/myGateServer/*
+.vs/*
