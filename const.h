@@ -21,5 +21,7 @@ enum ErrorCodes
 	ErrorGrpc = 1002,
 	VarifyExpired = 1003,
 	VarifyError = 1004,
-	UserAlreadyExist = 1005;
+	UserAlreadyExist = 1005,
+	usrNotMatchEmail = 1006,
+	upPwdFailed = 1007,
 };

@@ -157,3 +157,55 @@ int MysqlDao::regUser(std::string username, std::string email, std::string pwd)
 		return -1;
 	}
 }
+
+bool MysqlDao::checkUsrMatchEmail(const std::string& usr, const std::string email)
+{
+	auto con = _pool->getConnection();
+	try {
+
+		if (con == nullptr) {
+			return false;
+		}
+		Defer defer([this, &con]() {
+			_pool->returnConnection(std::move(con));
+			});
+		std::unique_ptr<sql::PreparedStatement> stmt(con->_con->prepareStatement("SELECT email FROM usr WHERE name = ?"));
+		stmt->setString(1, usr);
+		std::unique_ptr<sql::ResultSet> result(stmt->executeQuery());
+		while (result->next()) {
+			std::cout << "Check Email: " << result->getString("email") << std::endl;
+			if (result->getString("email") == email) {
+				return true;
+			}
+			return false;
+		}
+	}
+	catch (sql::SQLException& e) {
+		std::cout << "SQL error: " << e.what() << std::endl;
+		return false;
+	}
+}
+
+bool MysqlDao::updatePwd(const std::string& email, const std::string& pwd)
+{
+	auto con = _pool->getConnection();
+	try {
+		if (con == nullptr) {
+			return false;
+		}
+		Defer defer([this, &con]() {
+			_pool->returnConnection(std::move(con));
+			});
+		std::unique_ptr<sql::PreparedStatement> stmt(con->_con->prepareStatement("UPDATE user SET pwd = ? WHERE email = ?"));
+		stmt->setString(1, pwd);
+		stmt->setString(2, email);
+		
+		int upadteCount = stmt->executeUpdate();
+		std::cout << "Update row counts: " << upadteCount << std::endl;
+		return true;
+	}
+	catch (sql::SQLException& e) {
+		std::cout << "SQL error: " << e.what() << std::endl;
+		return false;
+	}
+}

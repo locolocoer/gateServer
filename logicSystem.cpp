@@ -79,7 +79,7 @@ void logicSystem::regPost()
 		}
 
 		auto sqlMgr = MysqlMgr::getInstance();
-		auto userid = sqlMgr->regUser(root["User"].toStyledString(), root["Email"].toStyledString(), root["Password"].toStyledString());
+		auto userid = sqlMgr->regUser(root["User"].asString(), root["Email"].asString(), root["Password"].asString());
 		if (userid == 0 || userid == -1) {
 			std::cout << "user already exist" << std::endl;
 			root["Error"] = ErrorCodes::UserAlreadyExist;
@@ -92,6 +92,52 @@ void logicSystem::regPost()
 		root["User"] = src_root["User"];
 		root["Uid"] = userid;
 		beast::ostream(con->get_request().body()) << root.toStyledString();
+		};
+	post_handlers["/reset_password"] = [](std::shared_ptr<HttpConnection> con) {
+		auto datastr = boost::beast::buffers_to_string(con->get_request().body().data());
+		Json::Value root, src_root;
+		Json::Reader reader;
+		bool isSucess = reader.parse(datastr, src_root);
+		if (!isSucess) {
+			std::cout << "Parse json failed!" << std::endl;
+			root["Error"] = ErrorCodes::ErrorJson;
+			beast::ostream(con->get_response().body()) << root.toStyledString();
+			return false;
+		}
+		auto email = src_root["Email"].asString();
+		auto username = src_root["User"].asString();
+		auto pwd = src_root["Password"].asString();
+		std::string varifyCode;
+		auto res = RedisMgr::getInstance()->Get(email, varifyCode);
+		if (!res) {
+			std::cout << "Varify code expired!" << std::endl;
+			root["Error"] = ErrorCodes::VarifyExpired;
+			beast::ostream(con->get_request().body()) << root.toStyledString();
+			return false;
+		}
+		if (varifyCode != src_root["varifyCode"].asString()) {
+			std::cout << "Varify code not match" << std::endl;
+			root["Error"] = ErrorCodes::VarifyError;
+			beast::ostream(con->get_request().body()) << root.toStyledString();
+			return false;
+		}
+		bool usrMatchEmail = MysqlMgr::getInstance()->checkUsrMatchEmail(src_root["User"].asString(), src_root["Email"].asString());
+		if (!usrMatchEmail) {
+			std::cout << "Username and Email are not matched" << std::endl;
+			root["Error"] = ErrorCodes::usrNotMatchEmail;
+			beast::ostream(con->get_request().body()) << root.toStyledString();
+			return false;
+		}
+		bool updateSucess = MysqlMgr::getInstance()->updatePwd(src_root["Email"].asString(), src_root["Password"].asString());
+		if (!updateSucess) {
+			std::cout << "update password failed" << std::endl;
+			root["Error"] = ErrorCodes::upPwdFailed;
+			beast::ostream(con->get_request().body()) << root.toStyledString();
+			return false;
+		}
+		root["Error"] = ErrorCodes::Sucess;
+		beast::ostream(con->get_request().body()) << root.toStyledString();
+		return true;
 		};
 }
 
