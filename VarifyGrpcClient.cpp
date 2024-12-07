@@ -1,5 +1,5 @@
 #include "VarifyGrpcClient.h"
-
+#include "ConfigMgr.h"
 GetVarifyRsp VarifyGrpcClient::GetVarifyCode(std::string email)
 {
 	ClientContext context;
@@ -16,6 +16,9 @@ GetVarifyRsp VarifyGrpcClient::GetVarifyCode(std::string email)
 
 VarifyGrpcClient::VarifyGrpcClient()
 {
-	std::shared_ptr<Channel> channle = grpc::CreateChannel("127.0.0.1:10001", grpc::InsecureChannelCredentials());
+	auto cfgMgr = ConfigMgr::Inst();
+	auto host = cfgMgr["VarifyServer"]["Host"];
+	auto port = cfgMgr["VarifyServer"]["Port"];
+	std::shared_ptr<Channel> channle = grpc::CreateChannel(host+":"+port, grpc::InsecureChannelCredentials());
 	_stub = VarifyService::NewStub(channle);
 }

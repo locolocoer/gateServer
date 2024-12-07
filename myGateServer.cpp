@@ -5,10 +5,9 @@
 #include <boost/asio.hpp>
 #include "Server.h"
 #include "const.h"
-#include "MysqlDao.h"
+
 int main()
 {
-    auto inst = MysqlDao::getInstance();
     
     try {
         boost::asio::io_context ioc;
