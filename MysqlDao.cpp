@@ -209,3 +209,35 @@ bool MysqlDao::updatePwd(const std::string& email, const std::string& pwd)
 		return false;
 	}
 }
+
+bool MysqlDao::checkPwd(const std::string& name, const std::string& pwd, UserInfo& info)
+{
+	auto con = _pool->getConnection();
+	Defer defer([this, &con]() {
+		_pool->returnConnection(std::move(con));
+		});
+	try {
+		if (con == nullptr) {
+			return false;
+		}
+		std::unique_ptr<sql::PreparedStatement> stmt(con->_con->prepareStatement("SELECT * FROM user WHERE name = ?"));
+		stmt->setString(1, name);
+		std::unique_ptr<sql::ResultSet> result(stmt->executeQuery());
+		std::string origin_pwd;
+		while (result->next()) {
+			origin_pwd = result->getString("pwd");
+			break;
+		}
+		if (origin_pwd != pwd) {
+			return false;
+		}
+		info.name = name;
+		info.email = result->getString("email");
+		info.uid = result->getInt("uid");
+		info.pwd = origin_pwd;
+	}
+	catch (sql::SQLException& e) {
+		std::cout << "SQL error: " << e.what() << std::endl;
+		return false;
+	}
+}

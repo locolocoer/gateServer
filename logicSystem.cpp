@@ -2,6 +2,7 @@
 #include "VarifyGrpcClient.h"
 #include "RedisMgr.h"
 #include "MysqlMgr.h"
+#include "StatusGrpcClient.h"
 logicSystem::logicSystem()
 {
 	regGet();
@@ -137,6 +138,45 @@ void logicSystem::regPost()
 		}
 		root["Error"] = ErrorCodes::Sucess;
 		beast::ostream(con->get_request().body()) << root.toStyledString();
+		return true;
+		};
+	post_handlers["/login"] = [](std::shared_ptr<HttpConnection> con) {
+		auto datastr = boost::beast::buffers_to_string(con->get_request().body().data());
+		Json::Value root, src_root;
+		Json::Reader reader;
+		bool isSucess = reader.parse(datastr, src_root);
+		if (!isSucess) {
+			std::cout << "Parse json failed!" << std::endl;
+			root["Error"] = ErrorCodes::ErrorJson;
+			beast::ostream(con->get_response().body()) << root.toStyledString();
+			return false;
+		}
+		auto email = src_root["Email"].asString();
+		auto username = src_root["User"].asString();
+		auto pwd = src_root["Password"].asString();
+		UserInfo info;
+		bool isMatch = MysqlMgr::getInstance()->checkPwd(username, pwd, info);
+		if (!isMatch) {
+			std::cout << "pwd not correct!" << std::endl;
+			root["Error"] = ErrorCodes::PwdNameNotMatch;
+			beast::ostream(con->get_response().body()) << root.toStyledString();
+			return false;
+		}
+		auto res = StatusGrpcClient::getInstance()->getChatServer(info.uid);
+		if (res.error()) {
+			std::cout << "GRPC FAILED!" << std::endl;
+			root["Error"] = ErrorCodes::ErrorGrpc;
+			beast::ostream(con->get_response().body()) << root.toStyledString();
+			return false;
+		}
+		root["Error"] = ErrorCodes::Sucess;
+		root["User"] = username;
+		root["Email"] = email;
+		root["Password"] = pwd;
+		root["Uid"] = info.uid;
+		root["Token"] = res.token();
+		root["Host"] = res.host();
+		beast::ostream(con->get_response().body()) << root.toStyledString();
 		return true;
 		};
 }

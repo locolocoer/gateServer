@@ -5,6 +5,8 @@
 #include <jdbc/cppconn/statement.h>
 #include <jdbc/cppconn/prepared_statement.h>
 
+
+
 class MysqlConnection {
 public:
 	std::unique_ptr<sql::Connection> _con;
@@ -36,6 +38,7 @@ public:
 	int regUser(std::string username, std::string email, std::string pwd);
 	bool checkUsrMatchEmail(const std::string& usr, const std::string email);
 	bool updatePwd(const std::string& email, const std::string& pwd);
+	bool checkPwd(const std::string& name, const std::string& pwd, UserInfo& info);
 	std::unique_ptr<MysqlPool> _pool;
 };
 

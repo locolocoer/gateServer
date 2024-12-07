@@ -24,4 +24,14 @@ enum ErrorCodes
 	UserAlreadyExist = 1005,
 	usrNotMatchEmail = 1006,
 	upPwdFailed = 1007,
+	PwdNameNotMatch = 1008,
+};
+
+
+class UserInfo {
+public:
+	std::string email;
+	int uid;
+	std::string name;
+	std::string pwd;
 };

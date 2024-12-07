@@ -2,7 +2,7 @@
 #include <grpcpp/grpcpp.h>
 #include "msg.grpc.pb.h"
 #include "Singleton.h"
-
+#include "StatusConPool.h"
 using grpc::Channel;
 using grpc::Status;
 using grpc::ClientContext;
@@ -16,6 +16,6 @@ public:
 	GetChatRsp getChatServer(int uid);
 private:
 	StatusGrpcClient();
-	std::shared_ptr<StatusService::Stub> _stub;
+	std::unique_ptr<StatusConPool> _pool;
 };
 

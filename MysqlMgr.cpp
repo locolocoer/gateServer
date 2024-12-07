@@ -15,6 +15,11 @@ bool MysqlMgr::updatePwd(const std::string& email, const std::string& pwd)
     return _dao.updatePwd(email,pwd);
 }
 
+bool MysqlMgr::checkPwd(const std::string& name, const std::string& pwd, UserInfo& info)
+{
+    return _dao.checkPwd(name, pwd, info);
+}
+
 MysqlMgr::~MysqlMgr()
 {
 }

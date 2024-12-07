@@ -7,7 +7,7 @@ GetChatRsp StatusGrpcClient::getChatServer(int uid)
 	GetChatRsp rsp;
 	GetChatReq req;
 	req.set_uid(uid);
-	Status status = _stub->GetChatServer(&context, req,&rsp);
+	Status status = _pool->getConnection()->GetChatServer(&context, req, &rsp);
 	if (status.ok()) {
 		return rsp;
 	}
@@ -21,5 +21,5 @@ StatusGrpcClient::StatusGrpcClient()
 	auto host = cfgMgr["StatusServer"]["Host"];
 	auto port = cfgMgr["StatusServer"]["Port"];
 	auto channel = grpc::CreateChannel(host + ":" + port, grpc::InsecureChannelCredentials());
-	_stub = StatusService::NewStub(channel);
+	_pool.reset(new StatusConPool(host, port, 5));
 }
