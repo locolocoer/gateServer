@@ -35,3 +35,5 @@ public:
 	std::string name;
 	std::string pwd;
 };
+
+#define codeprefix "code_"

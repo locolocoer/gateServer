@@ -36,7 +36,7 @@ redisContext* RedisConPool::getConnection()
 		if (_b_stop) {
 			return true;
 		}
-		return connections.empty();
+		return !connections.empty();
 		});
 	if (_b_stop) {
 		return nullptr;

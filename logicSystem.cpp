@@ -46,6 +46,10 @@ void logicSystem::regPost()
 		root["Error"] = ErrorCodes::Sucess;
 		std::string email = src_root["Email"].asString();
 		GetVarifyRsp rsp = VarifyGrpcClient::getInstance()->GetVarifyCode(email);
+		if (rsp.error()) {
+			root["Error"] = ErrorCodes::ErrorGrpc;
+			beast::ostream(con->get_response().body()) << root.toStyledString();
+		}
 		root["Email"] = src_root["Email"];
 		root["code"] = rsp.code();
 		beast::ostream(con->get_response().body()) << root.toStyledString();
